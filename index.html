@@ -52,13 +52,32 @@
                 </section>
             </section>
             <section>
-                <h6>Promise 实现原理</h6>
-                <section>
-                    Promise
-                </section>
-                <section>
-                    二
-                </section>
+                <h6>Promise 实现原理 - 使用方法</h6>
+                <pre><code class="hljs" data-trim contenteditable>
+// callback hell
+asyncOperation(function(data) {
+  // 处理 `data`
+  anotherAsync(function(data2) {
+      // 处理 `data2`
+      yetAnotherAsync(function() {
+          // 完成
+      });
+  });
+});
+                </code></pre>
+                =>
+                <pre><code class="hljs" data-trim contenteditable>
+// promise 实现
+asyncOperation().then(anotherAsync).then(yetAnotherAsync)
+                </code></pre>
+            </section>
+            <section>
+                <h6>Promise 实现原理 -  Promises/A 规范</h6>
+                <ul>
+                    <li>三种状态：未完成 (unfulfilled)，完成 (fulfilled) 和失败 (failed)</li>
+                    <li>状态只能由未完成转换成完成，或者未完成转换成失败</li>
+                    <li>状态转换只发生一次</li>
+                </ul>
             </section>
         </div>
     </div>
