@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>前端分享</title>
+    <link rel="stylesheet" href="./vendors/reveal/reveal.min.css">
+    <link rel="stylesheet" href="./vendors/reveal/theme/sky.css">
+    <link rel="stylesheet" href="./vendors/highlight/zenburn.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <h2>前端经验分享</h2>
+            </section>
+            <section>
+                <ul>
+                    <li>Webpack 插件机制</li>
+                    <li>Promise 实现原理</li>
+                </ul>
+            </section>
+            <section>
+                <h6>Webpack 插件机制 - Tapable</h6>
+                <section>
+                    <img src="./imgs/webpack-plugin.png" style='border-width: 1px;'>
+                </section>
+                <section>
+                    &lt;apis&gt;
+                    <ul>
+                        <li>apply - 执行插件的 apply 方法</li>
+                        <li>plugin - 注册事件监听</li>
+                        <li>applyPlugins - 并行执行事件对应的处理方法</li>
+                        <li>applyPluginsWaterfall - 顺序执行事件对应的处理方法，依次传递返回值</li>
+                        <li>applyPluginsAsync - 顺序执行异步处理，需要 call next</li>
+                    </ul>
+                </section>
+                <section>
+                    <ul>
+                        <li>applyPluginsBailResult - 顺序执行事件对应的处理方法，遇到任意一个处理有返回值即终止</li>
+                        <li>applyPluginsAsyncWaterfall - 顺序执行异步处理，需要 call next 并传递返回值</li>
+                        <li>applyPluginsParallel - 并行执行事件对应的处理方法，有一个出错即终止</li>
+                    </ul>
+                    &lt;/apis&gt;
+                </section>
+                <section>
+                    <p>
+                        优点：整个生命周期与每个节点的具体实现分离，大大降低模块耦合度，扩展性是极好的
+                    </p>
+                    <p>
+                        缺点：代码极其分散，不方便阅读。如果没有文档的话后期维护也会比较困难。
+                    </p>
+                </section>
+            </section>
+            <section>
+                <h6>Promise 实现原理</h6>
+                <section>
+                    Promise
+                </section>
+                <section>
+                    二
+                </section>
+            </section>
+        </div>
+    </div>
+    <script src='./vendors/reveal/reveal.min.js'></script>
+    <script src='./vendors/highlight/highlight.js'></script>
+    <script>
+        Reveal.initialize();
+    </script>
+</body>
+</html>
