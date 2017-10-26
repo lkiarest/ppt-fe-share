@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>前端分享</title>
+    <title>前端知识分享</title>
     <link rel="stylesheet" href="./vendors/reveal/reveal.min.css">
     <link rel="stylesheet" href="./vendors/reveal/theme/sky.css">
     <link rel="stylesheet" href="./vendors/highlight/zenburn.css">
@@ -11,12 +11,14 @@
     <div class="reveal">
         <div class="slides">
             <section>
-                <h2>前端经验分享</h2>
+                <h2>前端知识分享</h2>
             </section>
             <section>
                 <ul>
                     <li>Webpack 插件机制</li>
                     <li>Promise 实现原理</li>
+                    <li>Vue 响应式原理</li>
+                    <li>Js Event Loop</li>
                 </ul>
             </section>
             <section>
@@ -74,10 +76,178 @@ asyncOperation().then(anotherAsync).then(yetAnotherAsync)
             <section>
                 <h6>Promise 实现原理 -  Promises/A 规范</h6>
                 <ul>
-                    <li>三种状态：未完成 (unfulfilled)，完成 (fulfilled) 和失败 (failed)</li>
+                    <li>三种状态：未完成 (pending)，完成 (fulfilled) 和失败 (failed)</li>
                     <li>状态只能由未完成转换成完成，或者未完成转换成失败</li>
                     <li>状态转换只发生一次</li>
                 </ul>
+                <img src="imgs/promise-status.png" style='border-width: 1px;'>
+            </section>
+            <section>
+                <h6>Promise 实现原理 -  简单实现</h6>
+                <pre><code class="hljs" data-trim contenteditable>
+class PromiseA { // 不支持异步处理和状态检查，仅串行执行函数
+    constructor (fn) {
+        this.value = null
+        fn(this.resolve.bind(this))
+    }
+
+    resolve (value) {
+        this.value = value
+    }
+
+    then (fn) {
+        if (fn instanceof PromiseA) { // 嵌套promise
+            return fn
+        }
+
+        const retval = fn(this.value)
+        if (retval instanceof PromiseA) {
+            return retval
+        }
+
+        this.value = retval
+        return this
+    }
+}
+                </code></pre>
+            </section>
+            <section>
+                <h6>Promise 实现原理 -  支持异步处理，状态检查</h6>
+                <pre><code class="hljs" data-trim contenteditable>
+const STATUS = {pending: 1, fullfilled: 2, rejected: 3}
+
+class PromiseA {
+    constructor (fn) {
+        this.value = null
+        this.status = STATUS.pending
+        this.nextResolved = null
+        fn(this.resolve.bind(this))
+    }
+
+    resolve (value) {
+        this.value = value
+        this.status = STATUS.fullfilled
+        this.nextResolved && this.nextResolved(value)
+        this.nextResolved = null
+    }
+
+    then (onResolved) { // 不考虑异步处理和状态检查
+        const self = this
+        if (onResolved instanceof PromiseA) {
+            return onResolved
+        }
+
+        if (this.status === STATUS.pending) {
+            const newPromise = new PromiseA(function(resolve) {
+                self.nextResolved = function(value) {
+                    value = onResolved(value)
+                    if (value instanceof PromiseA) {
+                        newPromise.nextResolved && value.then(newPromise.nextResolved)
+                    } else {
+                        resolve(value)
+                    }
+                }
+            })
+
+            return newPromise
+        } else if (this.status === STATUS.fullfilled) {
+            return new PromiseA(function(resolve) {
+                resolve(onResolved(this.value))
+            })
+        }
+
+        return this
+    }
+}
+                </code></pre>
+            </section>
+            <section>
+                <h6>Vue 响应式原理</h6>
+                <section>
+                    <img src='imgs/vue-data.png' style='border-width: 1px;'>
+                </section>
+                <section>
+                    <pre><code class="hljs" data-trim contenteditable>
+function defineReactive (obj: Object, key: string, val: any ) {
+  const dep = new Dep()
+
+  Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get: function reactiveGetter () {
+      const value = getter ? getter.call(obj) : val
+      dep.depend()
+      return value
+    },
+    set: function reactiveSetter (newVal) {
+      const value = getter ? getter.call(obj) : val
+      if (setter) {
+        setter.call(obj, newVal)
+      } else {
+        val = newVal
+      }
+      dep.notify()
+    }
+  })
+}
+                    </code></pre>
+                </section>
+            </section>
+            <section>
+                <h6>Js Event Loop</h6>
+                <section>
+                    <img src="imgs/event-loop.jpg" style='border-width: 1px;'>
+                </section>
+                <section>
+                    <p>macrotask &amp; microtask</p>
+                    <pre><code class="hljs" data-trim contenteditable>
+console.log('script start');
+
+setTimeout(function() {
+    console.log('setTimeout');
+}, 0);
+
+Promise.resolve().then(function() {
+    console.log('promise1');
+}).then(function() {
+    console.log('promise2');
+});
+
+console.log('script end');
+                    </code></pre>
+                </section>
+                <section>
+                    <p>
+                        <ul>
+                            <li>macrotasks: setTimeout, setInterval, setImmediate, I/O, UI rendering</li>
+                            <li>microtasks: process.nextTick, Promises, MutationObserver</li>
+                        </ul>
+                    </p>
+                </section>
+                <section>
+                    Vue.nextTick (Old)
+                    <pre><code class="hljs" data-trim contenteditable>
+if (typeof Promise !== 'undefined' && isNative(Promise)) {
+  timerFunc = function () {
+    Promise.resolve().then(nextTickHandler).catch(logError);
+    if (isIOS) { setTimeout(noop); }
+  };
+} else if (typeof MutationObserver !== 'undefined'')) {
+  var observer = new MutationObserver(nextTickHandler);
+  observer.observe(textNode, {
+    characterData: true
+  });
+  timerFunc = function () {
+    counter = (counter + 1) % 2;
+    textNode.data = String(counter);
+  };
+} else {
+  timerFunc = function () {
+    setTimeout(nextTickHandler, 0);
+  };
+}
+                    </code></pre>
+                </section>
             </section>
         </div>
     </div>
